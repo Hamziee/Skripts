@@ -1,7 +1,7 @@
 # NJORD - Skript by HamzieDev (github.com/HamzieDev)
 # DON'T CHANGE ANYTHING UNLESS YOU KNOW WHAT YOU'RE DOING!
 # This Skript requires: SkBee and skript-placeholders
-# Version: 2.0.0
+# Version: 3.0.0
 
 # Variables
 on load:
@@ -16,12 +16,17 @@ on player join:
     send "%{log_prefix}% &fResource pack loaded for %player%." to console
     wait 7 seconds
     if {char_status::%player's uuid%} is not set:
+        execute console command "/freeze %player%"
         send "%{prefix}% &fYou do not have a character set up, use &6/setupcharacter <first name> <last name> <age>&f." to player
         send "%{prefix}% &fYou can use &6/character&f to view your character or someone else's." to player
         send "%{log_prefix}% &fPlayer %player% joined without a Character." to console
-    else:
+        send title "&bCharacter not found!" with subtitle "&f&lMovement blocked until a character is made." to player for 5 minutes
+        wait 5 minutes
+        if {char_status::%player's uuid%} is not set:
+            execute console command "/kick %player% %{prefix}% &fYou have been removed from the server for taking too long to set up a character."
+    if {char_status::%player's uuid%} is set:
+        execute console command "/unfreeze %player%"
         send "%{prefix}% &fWelcome back, &6%{char_name::%player's uuid%}%&f." to player
-
 
 # Generic Commands
 command /njord:
@@ -47,7 +52,9 @@ command /setupcharacter <text> <number>:
         set {char_status::%player's uuid%} to "alive"
         set {_name} to arg-1
         replace all " " with "_" in {_name} 
+        execute console command "/title %player% clear"
         execute console command "/nick %player% %{_name}%"
+        execute console command "/unfreeze %player%"
         send "%{prefix}% &fCharacter successfully created!" to player
         send "%{prefix}% &fWelcome &6%{char_name::%player's uuid%}%&f, you are &b%{char_age::%player's uuid%}% years &fold." to player
 
