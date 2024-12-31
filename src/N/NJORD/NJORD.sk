@@ -1,0 +1,243 @@
+# NJORD - Skript by HamzieDev (github.com/HamzieDev)
+# DON'T CHANGE ANYTHING UNLESS YOU KNOW WHAT YOU'RE DOING!
+# Version: 2.0.0
+
+# Variables
+on load:
+    set {prefix} to "&7[&4NJORD&7]&f"
+    set {log_prefix} to "&7[&4NJORD&7]&f"
+    set {version} to "2.0.0"
+
+on player join:
+    wait 5 seconds
+    execute console command "/o pack send %player%"
+    send "%{prefix}% &4Resource pack loaded." to player
+    send "%{log_prefix}% &fResource pack loaded for %player%." to console
+    wait 7 seconds
+    if {char_status::%player's uuid%} is not set:
+        send "%{prefix}% &fYou do not have a character set up, use &6/setupcharacter <first name> <last name> <age>&f." to player
+        send "%{prefix}% &fYou can use &6/character&f to view your character or someone else's." to player
+        send "%{log_prefix}% &fPlayer %player% joined without a Character." to console
+    else:
+        send "%{prefix}% &fWelcome back, &6%{char_name::%player's uuid%}%&f." to player
+
+
+# Generic Commands
+command /njord:
+    trigger:
+        send "%{prefix}% &4Njord is watching over you." to player
+        send "%{prefix}% &4Njord %{version}%." to player
+        send "%{prefix}% &4Crafted by: github.com/HamzieDev" to player
+        play sound "block.note_block.pling" at volume 1 at pitch 14 to player
+
+# Character
+command /setupcharacter <text> <number>:
+    usage: /setupcharacter <first name> <last name> <age>
+    description: Set up your character.
+    cooldown: 5 seconds
+    cooldown message: &4You must wait %time% before using this command again.
+    cooldown bypass: njord.cooldown.bypass
+    trigger:
+        if {char_name::%player's uuid%} is set:
+            send "%{prefix}% &4You already have a character!" to player
+            stop
+        set {char_name::%player's uuid%} to arg-1
+        set {char_age::%player's uuid%} to arg-2
+        set {char_status::%player's uuid%} to "alive"
+        set {_name} to arg-1
+        replace all " " with "_" in {_name} 
+        execute console command "/nick %player% %{_name}%"
+        send "%{prefix}% &fCharacter successfully created!" to player
+        send "%{prefix}% &fWelcome &6%{char_name::%player's uuid%}%&f, you are &b%{char_age::%player's uuid%}% years &fold." to player
+
+command /character [<offline player>]:
+    usage: /character <username> (Optional)
+    description: Set up your character.
+    cooldown: 5 seconds
+    cooldown message: &4You must wait %time% before using this command again.
+    cooldown bypass: njord.cooldown.bypass
+    trigger:
+        if arg-1 is not set:
+            set {_town} to the value of the placeholder "townyadvanced_town_unformatted" for the player
+            set {_nation} to the value of the placeholder "townyadvanced_nation_unformatted" for the player
+            send "%{prefix}% &fCharacter Name: %{char_name::%player's uuid%}%" to player
+            send "%{prefix}% &fCharacter Age: %{char_age::%player's uuid%}%" to player
+            send "%{prefix}% &fTown: %{_town}%" to player
+            send "%{prefix}% &fNation: %{_nation}%" to player
+            stop
+        if {char_age::%arg-1's uuid%} is not set:
+            send "%{prefix}% &4Unkown character!" to player
+            stop
+        set {_town} to the value of the placeholder "townyadvanced_town_unformatted" for the arg-1
+        set {_nation} to the value of the placeholder "townyadvanced_nation_unformatted" for the arg-1
+        send "%{prefix}% &fCharacter Name: %{char_name::%arg-1's uuid%}%" to player
+        send "%{prefix}% &fCharacter Age: %{char_age::%arg-1's uuid%}%" to player
+        send "%{prefix}% &fTown: %{_town}%" to player
+        send "%{prefix}% &fNation: %{_nation}%" to player
+
+command /njord-admin [<text>] [<text>] [<offline player>] [<text>] [<text>]:
+    usage: /setupcharacter <char>
+    description: NJORD Admin commands.
+    permission: njord.admin
+    permission message: {prefix} &4You do not have permission to use this command.
+    cooldown: 5 seconds
+    cooldown message: {prefix} &4You must wait %time% before using this command again.
+    cooldown bypass: njord.cooldown.bypass
+    trigger:
+        if arg-1 is "character":
+            if arg-2 is "edit":
+                if {char_name::%arg-3's uuid%} is not set:
+                    send "%{prefix}% &4Unkown character!" to player
+                    stop
+                if arg-4 is "name":
+                    set {char_name::%arg-3's uuid%} to arg-5
+                    set {_name} to arg-5
+                    replace all " " with "_" in {_name} 
+                    execute console command "/nick %arg-3% %{_name}%"
+                    send "%{prefix}% &fCharacter name updated for %arg-3%." to player
+                    send "%{log_prefix}% &fCharacter name updated for %arg-3% by %player%." to console
+                    stop
+                if arg-4 is "age":
+                    set {char_age::%arg-3's uuid%} to arg-5
+                    send "%{prefix}% &fCharacter age updated for %arg-3%." to player
+                    send "%{log_prefix}% &fCharacter age updated for %arg-3% by %player%." to console
+                    stop
+                send "%{prefix}% &4Invalid arguments." to player
+                stop
+            if arg-2 is "delete":
+                if {char_name::%arg-3's uuid%} is not set:
+                    send "%{prefix}% &4Unkown character!" to player
+                    stop
+                delete {char_name::%arg-3's uuid%}
+                delete {char_age::%arg-3's uuid%}
+                delete {char_status::%arg-3's uuid%}
+                execute console command "/nick %arg-3% off"
+                execute console command "/whitelist remove %arg-3%"
+                execute console command "/kick %arg-3% %{prefix}% &fNJORD has removed you from the server, because your character has been deleted."
+                send "%{prefix}% &fCharacter deleted for %arg-3%." to player
+                send "%{log_prefix}% &fCharacter deleted for %arg-3% by %player%." to console
+                stop
+            send "%{prefix}% &4Invalid arguments." to player
+            stop
+        if arg-1 is "version":
+            send "%{prefix}% &4Njord is watching over you." to player
+            send "%{prefix}% &4Njord %{version}%." to player
+            send "%{prefix}% &4Crafted by: github.com/HamzieDev" to player
+            stop
+        send "%{prefix}% &4Invalid arguments." to player
+
+on tab complete of "/njord-admin":
+    set tab completions for position 1 to "character" and "version"
+    set tab completions for position 2 to "edit" and "delete"
+    set tab completions for position 4 to "name" and "age"
+
+# Background loop
+every 5 ticks:
+    loop all players:
+        # Slot 1 (Hotbar slot 2)
+        if slot 1 of loop-player's inventory is a sword or bow or trident or axe:
+            send "%{prefix}% &4Illegal item in hotbar slot 2, remove the item within 3 seconds or it will be deleted." to loop-player
+            wait 3 seconds
+            if slot 1 of loop-player's inventory is a sword or bow or trident or axe:
+                set {_item} to slot 1 of loop-player's inventory
+                set {_currentpos} to location 3 infront head of loop-player
+                set slot 1 of loop-player's inventory to air
+                drop {_item} at {_currentpos} without velocity
+                send "%{prefix}% &4Prevented illegal item placement." to loop-player
+                send "%{log_prefix}% &fPrevented illegal item placement for %loop-player%, item: %{_item}%" to console
+
+        # Slot 2 (Hotbar slot 3)
+        if slot 2 of loop-player's inventory is a sword or bow or trident or axe:
+            send "%{prefix}% &4Illegal item in hotbar slot 3, remove the item within 3 seconds or it will be deleted." to loop-player
+            wait 3 seconds
+            if slot 2 of loop-player's inventory is a sword or bow or trident or axe:
+                set {_item} to slot 2 of loop-player's inventory
+                set {_currentpos} to location 3 infront head of loop-player
+                set slot 2 of loop-player's inventory to air
+                drop {_item} at {_currentpos} without velocity
+                send "%{prefix}% &4Prevented illegal item placement." to loop-player
+                send "%{log_prefix}% &fPrevented illegal item placement for %loop-player%, item: %{_item}%" to console
+
+        # Slot 3 (Hotbar slot 4)
+        if slot 3 of loop-player's inventory is a sword or bow or trident or axe:
+            send "%{prefix}% &4Illegal item in hotbar slot 4, remove the item within 3 seconds or it will be deleted." to loop-player
+            wait 3 seconds
+            if slot 3 of loop-player's inventory is a sword or bow or trident or axe:
+                set {_item} to slot 3 of loop-player's inventory
+                set {_currentpos} to location 3 infront head of loop-player
+                set slot 3 of loop-player's inventory to air
+                drop {_item} at {_currentpos} without velocity
+                send "%{prefix}% &4Prevented illegal item placement." to loop-player
+                send "%{log_prefix}% &fPrevented illegal item placement for %loop-player%, item: %{_item}%" to console
+
+        # Slot 4 (Hotbar slot 5)
+        if slot 4 of loop-player's inventory is a sword or bow or trident or axe:
+            send "%{prefix}% &4Illegal item in hotbar slot 5, remove the item within 3 seconds or it will be deleted." to loop-player
+            wait 3 seconds
+            if slot 4 of loop-player's inventory is a sword or bow or trident or axe:
+                set {_item} to slot 4 of loop-player's inventory
+                set {_currentpos} to location 3 infront head of loop-player
+                set slot 4 of loop-player's inventory to air
+                drop {_item} at {_currentpos} without velocity
+                send "%{prefix}% &4Prevented illegal item placement." to loop-player
+                send "%{log_prefix}% &fPrevented illegal item placement for %loop-player%, item: %{_item}%" to console
+
+        # Slot 5 (Hotbar slot 6)
+        if slot 5 of loop-player's inventory is a sword or bow or trident or axe:
+            send "%{prefix}% &4Illegal item in hotbar slot 6, remove the item within 3 seconds or it will be deleted." to loop-player
+            wait 3 seconds
+            if slot 5 of loop-player's inventory is a sword or bow or trident or axe:
+                set {_item} to slot 5 of loop-player's inventory
+                set {_currentpos} to location 3 infront head of loop-player
+                set slot 5 of loop-player's inventory to air
+                drop {_item} at {_currentpos} without velocity
+                send "%{prefix}% &4Prevented illegal item placement." to loop-player
+                send "%{log_prefix}% &fPrevented illegal item placement for %loop-player%, item: %{_item}%" to console
+
+        # Slot 6 (Hotbar slot 7)
+        if slot 6 of loop-player's inventory is a sword or bow or trident or axe:
+            send "%{prefix}% &4Illegal item in hotbar slot 7, remove the item within 3 seconds or it will be deleted." to loop-player
+            wait 3 seconds
+            if slot 6 of loop-player's inventory is a sword or bow or trident or axe:
+                set {_item} to slot 6 of loop-player's inventory
+                set {_currentpos} to location 3 infront head of loop-player
+                set slot 6 of loop-player's inventory to air
+                drop {_item} at {_currentpos} without velocity
+                send "%{prefix}% &4Prevented illegal item placement." to loop-player
+                send "%{log_prefix}% &fPrevented illegal item placement for %loop-player%, item: %{_item}%" to console
+
+        # Slot 7 (Hotbar slot 8)
+        if slot 7 of loop-player's inventory is a sword or bow or trident or axe:
+            send "%{prefix}% &4Illegal item in hotbar slot 8, remove the item within 3 seconds or it will be deleted." to loop-player
+            wait 3 seconds
+            if slot 7 of loop-player's inventory is a sword or bow or trident or axe:
+                set {_item} to slot 7 of loop-player's inventory
+                set {_currentpos} to location 3 infront head of loop-player
+                set slot 7 of loop-player's inventory to air
+                drop {_item} at {_currentpos} without velocity
+                send "%{prefix}% &4Prevented illegal item placement." to loop-player
+                send "%{log_prefix}% &fPrevented illegal item placement for %loop-player%, item: %{_item}%" to console
+
+        # Slot 8 (Hotbar slot 9)
+        if slot 8 of loop-player's inventory is a sword or bow or trident or axe:
+            send "%{prefix}% &4Illegal item in hotbar slot 9, remove the item within 3 seconds or it will be deleted." to loop-player
+            wait 3 seconds
+            if slot 8 of loop-player's inventory is a sword or bow or trident or axe:
+                set {_item} to slot 8 of loop-player's inventory
+                set {_currentpos} to location 3 infront head of loop-player
+                set slot 8 of loop-player's inventory to air
+                drop {_item} at {_currentpos} without velocity
+                send "%{prefix}% &4Prevented illegal item placement." to loop-player
+                send "%{log_prefix}% &fPrevented illegal item placement for %loop-player%, item: %{_item}%" to console
+
+        # Offhand slot
+        if slot 40 of loop-player's inventory is not a shield or air:
+            send "%{prefix}% &4Illegal item in offhand slot, remove the item within 3 seconds or it will be deleted." to loop-player
+            wait 3 seconds
+            if slot 40 of loop-player's inventory is not a shield or air:
+                set {_item} to slot 40 of loop-player's inventory
+                set {_currentpos} to location 3 infront head of loop-player
+                set slot 40 of loop-player's inventory to air
+                drop {_item} at {_currentpos} without velocity
+                send "%{prefix}% &4Prevented illegal item placement." to loop-player
+                send "%{log_prefix}% &fPrevented illegal item placement offhand for %loop-player%, item: %{_item}%" to console
