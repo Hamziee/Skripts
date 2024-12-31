@@ -7,7 +7,7 @@
 on load:
     set {prefix} to "&7[&4NJORD&7]&f"
     set {log_prefix} to "&7[&4NJORD&7]&f"
-    set {version} to "2.0.0"
+    set {version} to "3.0.0"
 
 on player join:
     wait 5 seconds
@@ -16,6 +16,7 @@ on player join:
     send "%{log_prefix}% &fResource pack loaded for %player%." to console
     wait 7 seconds
     if {char_status::%player's uuid%} is not set:
+        execute console command "/minecraft:teleport %player% 2475 100 4659"
         execute console command "/freeze %player%"
         send "%{prefix}% &fYou do not have a character set up, use &6/setupcharacter <first name> <last name> <age>&f." to player
         send "%{prefix}% &fYou can use &6/character&f to view your character or someone else's." to player
@@ -24,9 +25,11 @@ on player join:
         wait 5 minutes
         if {char_status::%player's uuid%} is not set:
             execute console command "/kick %player% %{prefix}% &fYou have been removed from the server for taking too long to set up a character."
+        stop
     if {char_status::%player's uuid%} is set:
         execute console command "/unfreeze %player%"
-        send "%{prefix}% &fWelcome back, &6%{char_name::%player's uuid%}%&f." to player
+        send "%{prefix}% &fWelcome back, &6%{char_firstname::%player's uuid%}% %{char_lastname::%player's uuid%}%&f." to player
+    
 
 # Generic Commands
 command /njord:
@@ -36,56 +39,76 @@ command /njord:
         send "%{prefix}% &4Crafted by: github.com/HamzieDev" to player
         play sound "block.note_block.pling" at volume 1 at pitch 14 to player
 
+command /year:
+    trigger:
+        send "%{prefix}% &fWe are currently in the year &b%{year}%&f." to player
+
 # Character
-command /setupcharacter <text> <number>:
+command /setupcharacter <text> <text> <number>:
     usage: /setupcharacter <first name> <last name> <age>
     description: Set up your character.
     cooldown: 5 seconds
     cooldown message: &4You must wait %time% before using this command again.
     cooldown bypass: njord.cooldown.bypass
     trigger:
-        if {char_name::%player's uuid%} is set:
+        if {char_status::%player's uuid%} is set:
             send "%{prefix}% &4You already have a character!" to player
             stop
-        set {char_name::%player's uuid%} to arg-1
-        set {char_age::%player's uuid%} to arg-2
+        set {char_firstname::%player's uuid%} to arg-1
+        set {char_lastname::%player's uuid%} to arg-2
+        set {char_age::%player's uuid%} to arg-3
         set {char_status::%player's uuid%} to "alive"
-        set {_name} to arg-1
-        replace all " " with "_" in {_name}
+        set {_firstname} to arg-1
+        set {_lastname} to arg-2
+        replace all " " with "_" in {_firstname}
+        replace all " " with "_" in {_lastname}
         execute console command "/title %player% clear"
-        execute console command "/nick %player% %{_name}%"
+        execute console command "/nick %player% %{_firstname}%_%{_lastname}%"
         execute console command "/unfreeze %player%"
         send "%{prefix}% &fCharacter successfully created!" to player
-        send "%{prefix}% &fWelcome &6%{char_name::%player's uuid%}%&f, you are &b%{char_age::%player's uuid%}% years &fold." to player
+        send "%{prefix}% &fWelcome &6%{char_firstname::%player's uuid%}% %{char_lastname::%player's uuid%}%&f, you are &b%{char_age::%player's uuid%}% years &fold." to player
 
-command /character [<offline player>]:
-    usage: /character <username> (Optional)
+on tab complete of "/setupcharacter":
+    set tab completions for position 1 to "first_name"
+    set tab completions for position 2 to "last_name"
+    set tab completions for position 3 to "age"
+
+command /character [<offline player:offline player=%player%>] [<text>]:
+    usage: /character <username> (Optional) <text> (Optional)
     description: Set up your character.
     cooldown: 5 seconds
     cooldown message: &4You must wait %time% before using this command again.
     cooldown bypass: njord.cooldown.bypass
     trigger:
-        if arg-1 is not set:
-            set {_town} to the value of the placeholder "townyadvanced_town_unformatted" for the player
-            set {_nation} to the value of the placeholder "townyadvanced_nation_unformatted" for the player
-            send "%{prefix}% &fCharacter Name: %{char_name::%player's uuid%}%" to player
-            send "%{prefix}% &fCharacter Age: %{char_age::%player's uuid%}%" to player
-            send "%{prefix}% &fTown: %{_town}%" to player
-            send "%{prefix}% &fNation: %{_nation}%" to player
-            stop
         if {char_age::%arg-1's uuid%} is not set:
             send "%{prefix}% &4Unkown character!" to player
             stop
+        set {_firstname} to {char_firstname::%arg-1's uuid%}
+        set {_lastname} to {char_lastname::%arg-1's uuid%}
+        set {_age} to {char_age::%arg-1's uuid%}
         set {_town} to the value of the placeholder "townyadvanced_town_unformatted" for the arg-1
         set {_nation} to the value of the placeholder "townyadvanced_nation_unformatted" for the arg-1
-        if {_town} is not set:
-            set {_town} to "&cNot a citizen of any town."
-        if {_nation} is not set:
-            set {_nation} to "&cNot a citizen of any nation."
-        send "%{prefix}% &fCharacter Name: %{char_name::%arg-1's uuid%}%" to player
-        send "%{prefix}% &fCharacter Age: %{char_age::%arg-1's uuid%}%" to player
-        send "%{prefix}% &fTown: %{_town}%" to player
-        send "%{prefix}% &fNation: %{_nation}%" to player
+        if arg-2 is "text":
+            send "%{prefix}% &fCharacter Name: &6%{_firstname}% %{_lastname}%" to player
+            send "%{prefix}% &fCharacter Age: &b%{_age}%" to player
+            send "%{prefix}% &fTown: &c%{_town} ? "Not a citizen of any town."%" to player
+            send "%{prefix}% &fNation: &c%{_nation} ? "Not a citizen of any nation."%" to player
+            stop
+
+        set metadata tag "charGUI" of player to chest inventory with 3 rows named "%{prefix}% &2&lCharacter Info"
+        set slot 11 of metadata tag "charGUI" of player to arg-1's skull named "&6%{_firstname}% %{_lastname}%" with lore "&fCharacter Name"
+        set slot 13 of metadata tag "charGUI" of player to skeleton skull named "&b%{_age}% years old" with lore "&fCharacter Age"
+        set slot 15 of metadata tag "charGUI" of player to iron sword named "&fTown: &c%{_town} ? "Not a citizen of any town."%" with lore "&fNation: &c%{_nation} ? "Not a citizen of any nation."%"
+        set slot 0,1,2,3,4,5,6,7,8,9,10,12,14,16,17,18,19,20,21,22,23,24,25 and 26 of metadata tag "charGUI" of player to grey glass pane named "&f"
+        open (metadata tag "charGUI" of player) to player
+
+on inventory click:
+    if event-inventory = (metadata tag "charGUI" of player):
+        cancel event
+
+on tab complete of "/character":
+    set tab completions for position 2 to "gui" and "text"
+
 
 command /njord-admin [<text>] [<text>] [<offline player>] [<text>] [<text>]:
     usage: /setupcharacter <char>
@@ -98,14 +121,25 @@ command /njord-admin [<text>] [<text>] [<offline player>] [<text>] [<text>]:
     trigger:
         if arg-1 is "character":
             if arg-2 is "edit":
-                if {char_name::%arg-3's uuid%} is not set:
+                if {char_status::%arg-3's uuid%} is not set:
                     send "%{prefix}% &4Unkown character!" to player
                     stop
-                if arg-4 is "name":
-                    set {char_name::%arg-3's uuid%} to arg-5
-                    set {_name} to arg-5
-                    replace all " " with "_" in {_name} 
-                    execute console command "/nick %arg-3% %{_name}%"
+                if arg-4 is "firstname":
+                    set {char_firstname::%arg-3's uuid%} to arg-5
+                    set {_firstname} to {char_firstname::%arg-3's uuid%}
+                    set {_lastname} to {char_lastname::%arg-3's uuid%}
+                    replace all " " with "_" in {_firstname} 
+                    replace all " " with "_" in {_lastname} 
+                    execute console command "/nick %arg-3% %{_firstname}%_%{_lastname}%"
+                    send "%{prefix}% &fCharacter name updated for %arg-3%." to player
+                    send "%{log_prefix}% &fCharacter name updated for %arg-3% by %player%." to console
+                    stop
+                if arg-4 is "lastname":
+                    set {char_lastname::%arg-3's uuid%} to arg-5
+                    set {_firstname} to {char_firstname::%arg-3's uuid%}
+                    set {_lastname} to {char_lastname::%arg-3's uuid%}
+                    replace all " " with "_" in {_lastname} 
+                    execute console command "/nick %arg-3% %{_firstname}%_%{_lastname}%"
                     send "%{prefix}% &fCharacter name updated for %arg-3%." to player
                     send "%{log_prefix}% &fCharacter name updated for %arg-3% by %player%." to console
                     stop
@@ -117,7 +151,7 @@ command /njord-admin [<text>] [<text>] [<offline player>] [<text>] [<text>]:
                 send "%{prefix}% &4Invalid arguments." to player
                 stop
             if arg-2 is "delete":
-                if {char_name::%arg-3's uuid%} is not set:
+                if {char_status::%arg-3's uuid%} is not set:
                     send "%{prefix}% &4Unkown character!" to player
                     stop
                 delete {char_name::%arg-3's uuid%}
@@ -131,17 +165,57 @@ command /njord-admin [<text>] [<text>] [<offline player>] [<text>] [<text>]:
                 stop
             send "%{prefix}% &4Invalid arguments." to player
             stop
-        if arg-1 is "version":
-            send "%{prefix}% &4Njord is watching over you." to player
-            send "%{prefix}% &4Njord %{version}%." to player
-            send "%{prefix}% &4Crafted by: github.com/HamzieDev" to player
-            stop
         send "%{prefix}% &4Invalid arguments." to player
 
 on tab complete of "/njord-admin":
     set tab completions for position 1 to "character" and "version"
     set tab completions for position 2 to "edit" and "delete"
-    set tab completions for position 4 to "name" and "age"
+    set tab completions for position 4 to "firstname", "lastname" and "age"
+
+
+command /njord-admin-year-change <number>:
+    usage: /njord-admin-year-change> <number>
+    description: NJORD Admin commands.
+    permission: njord.admin
+    permission message: {prefix} &4You do not have permission to use this command.
+    cooldown: 5 seconds
+    cooldown message: {prefix} &4You must wait %time% before using this command again.
+    cooldown bypass: njord.cooldown.bypass
+    trigger:
+        set {year} to arg-1
+        send "%{prefix}% &fYear set to %{year}%." to player
+        send "%{log_prefix}% &fYear set to %{year}% by %player%." to console
+
+on tab complete of "/njord-admin-year-change":
+    set tab completions for position 1 to "year"
+
+
+command /njord-admin-year-character <text>:
+    usage: /njord-admin-year-character <up/down>
+    description: NJORD Admin commands.
+    permission: njord.admin
+    permission message: {prefix} &4You do not have permission to use this command.
+    cooldown: 5 seconds
+    cooldown message: {prefix} &4You must wait %time% before using this command again.
+    cooldown bypass: njord.cooldown.bypass
+    trigger:
+        if arg-1 is "up":
+            loop {char_age::*}:
+                add 1 to {char_age::%loop-index%}
+            add 1 to {year}
+            send "%{prefix}% &fAll character ages have been increased by 1." to player
+            send "%{log_prefix}% &fAll character ages have been increased by 1 by %player%." to console
+            stop
+        if arg-1 is "down":
+            loop {char_age::*}:
+                subtract 1 from {char_age::%loop-index%}
+            subtract 1 from {year}
+            send "%{prefix}% &fAll character ages have been decreased by 1." to player
+            send "%{log_prefix}% &fAll character ages have been decreased by 1 by %player%." to console
+            stop
+
+on tab complete of "/njord-admin-year-character":
+    set tab completions for position 1 to "up" and "down"
 
 # Background loop
 every 5 ticks:
