@@ -51,7 +51,7 @@ command /setupcharacter <text> <number>:
         set {char_age::%player's uuid%} to arg-2
         set {char_status::%player's uuid%} to "alive"
         set {_name} to arg-1
-        replace all " " with "_" in {_name} 
+        replace all " " with "_" in {_name}
         execute console command "/title %player% clear"
         execute console command "/nick %player% %{_name}%"
         execute console command "/unfreeze %player%"
@@ -78,6 +78,10 @@ command /character [<offline player>]:
             stop
         set {_town} to the value of the placeholder "townyadvanced_town_unformatted" for the arg-1
         set {_nation} to the value of the placeholder "townyadvanced_nation_unformatted" for the arg-1
+        if {_town} is not set:
+            set {_town} to "&cNot a citizen of any town."
+        if {_nation} is not set:
+            set {_nation} to "&cNot a citizen of any nation."
         send "%{prefix}% &fCharacter Name: %{char_name::%arg-1's uuid%}%" to player
         send "%{prefix}% &fCharacter Age: %{char_age::%arg-1's uuid%}%" to player
         send "%{prefix}% &fTown: %{_town}%" to player
