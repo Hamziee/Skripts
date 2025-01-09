@@ -1,13 +1,13 @@
 # NJORD - Skript by HamzieDev (github.com/HamzieDev)
 # DON'T CHANGE ANYTHING UNLESS YOU KNOW WHAT YOU'RE DOING!
 # This Skript requires: SkBee and skript-placeholders
-# Version: 5.1.0
+# Version: 6.3.2
 
 # Variables
 on load:
     set {prefix} to "&7[&4NJORD&7]&f"
     set {log_prefix} to "&7[&4NJORD&7]&f"
-    set {version} to "5.1.0"
+    set {version} to "6.3.2"
 
 on player join:
     wait 5 seconds
@@ -122,12 +122,12 @@ command /njord:
 
 command /year:
     trigger:
-        send "%{prefix}% &fWe are currently in the year &b%{year}%&f." to player
+        send "%{prefix}% &fWe are currently in the year &b%{year}% AD&f." to player
 
 
 # Character
-command /setupcharacter <text> <text> <number>:
-    usage: /setupcharacter <first name> <last name> <age>
+command /setupcharacter <text> <text> <number> <text>:
+    usage: /setupcharacter <first_name> <last_name> <age> <gender>
     description: Set up your character.
     cooldown: 5 seconds
     cooldown message: &4You must wait %time% before using this command again.
@@ -136,6 +136,16 @@ command /setupcharacter <text> <text> <number>:
         if {char_status::%player's uuid%} is set:
             send "%{prefix}% &4You already have a character!" to player
             stop
+        if arg-1, arg-2, arg-3 and arg-4 is not set:
+            send "%{prefix}% &fInvalid arguments! &bUsage: /setupcharacter <first_name> <last_name> <age> <gender>" to player
+            stop
+        if arg-4 is not "Masculine" or "Feminine":
+            send "%{prefix}% &fInvalid argument for gender! &bChoose out of Masculine or Feminine." to player
+            stop
+        if arg-4 is "Masculine":
+            make player execute command "/gender set ma"
+        if arg-4 is "Feminine":
+            make player execute command "/gender set fe"	
         set {char_firstname::%player's uuid%} to arg-1
         set {char_lastname::%player's uuid%} to arg-2
         set {char_age::%player's uuid%} to arg-3
@@ -154,6 +164,7 @@ on tab complete of "/setupcharacter":
     set tab completions for position 1 to "first_name"
     set tab completions for position 2 to "last_name"
     set tab completions for position 3 to "age"
+    set tab completions for position 4 to "Masculine" and "Feminine"
 
 command /character-rp [<text>]:
     usage: /character <username> (Optional) <text> (Optional)
@@ -171,15 +182,15 @@ command /character-rp [<text>]:
         message "%{prefix}% &fUsername is above this message, enter it in like this: &6/character <username> &b&l| &fIf it says No player found, then the name you put in does not belong to any character."
         
 
-command /character [<offline player:offline player=%player%>] [<text>]:
-    usage: /character <username> (Optional) <text> (Optional)
+command /character [<offline player:offline player=%player%>]:
+    usage: /character <username> (Optional)
     description: Set up your character.
     cooldown: 5 seconds
     cooldown message: &4You must wait %time% before using this command again.
     cooldown bypass: njord.cooldown.bypass
     aliases: /char
     trigger:
-        if {char_age::%arg-1's uuid%} is not set:
+        if {char_status::%arg-1's uuid%} is not set:
             send "%{prefix}% &4Unkown character!" to player
             stop
         set {_firstname} to {char_firstname::%arg-1's uuid%}
@@ -187,25 +198,31 @@ command /character [<offline player:offline player=%player%>] [<text>]:
         set {_age} to {char_age::%arg-1's uuid%}
         set {_town} to the value of the placeholder "townyadvanced_town_unformatted" for the arg-1
         set {_nation} to the value of the placeholder "townyadvanced_nation_unformatted" for the arg-1
-        if arg-2 is "text":
-            send "%{prefix}% &fCharacter Name: &6%{_firstname}% %{_lastname}%" to player
-            send "%{prefix}% &fCharacter Age: &b%{_age}%" to player
-            send "%{prefix}% &fTown: &c%{_town} ? "Not a citizen of any town."%" to player
-            send "%{prefix}% &fNation: &c%{_nation} ? "Not a citizen of any nation."%" to player
-            stop
-        set metadata tag "charGUI" of player to chest inventory with 4 rows named "%{prefix}% &2&lCharacter Info"
+        set {_gender} to the value of the placeholder "lunaticfamily_gender" for the arg-1
+        if {_gender} is "feminine":
+            set {_gender} to "&dFeminine"
+        else if {_gender} is "masculine":
+            set {_gender} to "&bMasculine"
+        set {_firstKid} to the value of the placeholder "lunaticfamily_adoptionAsParent_firstChild_child" for the arg-1
+        set {_secondKid} to the value of the placeholder "lunaticfamily_adoptionAsParent_secondChild_child" for the arg-1
+        set {_partner} to the value of the placeholder "lunaticfamily_marriage_partner" for the arg-1
+        set metadata tag "charGUI" of player to chest inventory with 5 rows named "%{prefix}% &2&lCharacter Info"
         if arg-1 is "Hamziee":
-            set slot 7 of metadata tag "charGUI" of player to barrier named "&a✔ &7[&4NJORD&7-&5DEVELOPER&7]" with lore "&fThis player is the guy behind NJORD.", "&9He made the plugin you are using right now." and "&2He is sooo cool and awsome ;)"
-            set slot 8 of metadata tag "charGUI" of player to bedrock named "&a✔ &6Official Staff" with lore "&8This player is an official staff member."
-            set slot 0,1,2,3,4,5,6,9,10,12,14,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34 and 35 of metadata tag "charGUI" of player to grey glass pane named "&f"
+            set slot 0,8,36 and 44 of metadata tag "charGUI" of player to dragon egg named "&a✔ &7[&4NJORD&7-&5DEVELOPER&7]" with lore "&fThis player is the guy behind NJORD.", "&9He made the plugin you are using right now." and "&2He is sooo cool and awsome ;)"
+            set slot 31 of metadata tag "charGUI" of player to bedrock named "&a✔ &6Official Staff" with lore "&fThis player is an official staff member."
+            set slot 1,2,3,4,5,6,7,9,10,12,14,16,17,18,19,20,24,25,26,27,28,29,30,32,33,34,35,37,38,39,40,41,42, and 43 of metadata tag "charGUI" of player to grey glass pane named "&f"
         else if player is op:
-            set slot 8 of metadata tag "charGUI" of player to bedrock named "&a✔ &6Official Staff" with lore "&8This player is an official staff member."
-            set slot 0,1,2,3,4,5,6,7,9,10,12,14,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34 and 35 of metadata tag "charGUI" of player to grey glass pane named "&f"
+            set slot 31 of metadata tag "charGUI" of player to bedrock named "&a✔ &6Official Staff" with lore "&fThis player is an official staff member."
+            set slot 0,1,2,3,4,5,6,7,8,9,10,12,14,16,17,18,19,20,24,25,26,27,28,29,30,32,33,34,35,36,37,38,39,40,41,42,43 and 44 of metadata tag "charGUI" of player to grey glass pane named "&f"
         else:
-            set slot 0,1,2,3,4,5,6,7,8,9,10,12,14,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34 and 35 of metadata tag "charGUI" of player to grey glass pane named "&f"
+            set slot 0,1,2,3,4,5,6,7,8,9,10,12,14,16,17,18,19,20,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43 and 44 of metadata tag "charGUI" of player to grey glass pane named "&f"
         set slot 11 of metadata tag "charGUI" of player to arg-1's skull named "&6%{_firstname}% %{_lastname}%" with lore "&fCharacter Name"
         set slot 13 of metadata tag "charGUI" of player to skeleton skull named "&b%{_age}% years old" with lore "&fCharacter Age"
         set slot 15 of metadata tag "charGUI" of player to iron sword named "&fTown: &c%{_town} ? "Not a citizen of any town."%" with lore "&fNation: &c%{_nation} ? "Not a citizen of any nation."%"
+        set slot 21 of metadata tag "charGUI" of player to paper named "&b%{_gender} ? "BUG! NO GENDER FOUND!"%" with lore "&fCharacter Gender"
+        #set slot 22 of metadata tag "charGUI" of player to lantern named "&fFirst Child: &c%{_firstKid} ? "Does not have a first child."%" with lore "&fSecond Child: &c%{_secondKid} ? "Does not have a second child."%"
+        set slot 22 of metadata tag "charGUI" of player to lantern named "&fFirst Child: &b&k HAMZIEE THE BEST " with lore "&fSecond Child: &c&k HAMZIEE THE BEST"
+        set slot 23 of metadata tag "charGUI" of player to cake named "&eMarried to: &5%{_partner} ? "&4Not married."%" with lore "&fCharacter Relationship"
         open (metadata tag "charGUI" of player) to player
 
 on inventory click:
@@ -319,6 +336,19 @@ command /njord-admin-year-character <text>:
 
 on tab complete of "/njord-admin-year-character":
     set tab completions for position 1 to "up" and "down"
+
+# Hub
+command /hub:
+    usage: /hub
+    description: /hub
+    cooldown: 5 seconds
+    cooldown message: {prefix} &4You must wait %time% before using this command again.
+    cooldown bypass: njord.cooldown.bypass
+    aliases: /lobby
+    trigger:
+        make player execute command "/server lobbys"
+        stop
+
 
 # Background loop
 every 5 ticks:
