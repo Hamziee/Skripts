@@ -1,22 +1,32 @@
 # NJORD - Skript by HamzieDev (github.com/HamzieDev)
 # DON'T CHANGE ANYTHING UNLESS YOU KNOW WHAT YOU'RE DOING!
 # This Skript requires: SkBee and skript-placeholders
-# Version: 6.3.2
+# Version: 6.5.3
 
 # Variables
 on load:
     set {prefix} to "&7[&4NJORD&7]&f"
     set {log_prefix} to "&7[&4NJORD&7]&f"
-    set {version} to "6.3.2"
+    set {version} to "6.5.3"
+    send "%{prefix}% &fNJORD %{version}% has been loaded." to console
+    send "%{prefix}% &fBy github.com/HamzieDev" to console
+    send "%{prefix}% &fWaiting 1 minute to run customcrafting reload" to console
+    wait 1 minute
+    send "%{prefix}% &fRunning customcrafting reload" to console
+    execute console command "customcrafting reload"
+    send "%{prefix}% &fCustomCrafting has been reloaded." to console
+    send "%{prefix}% &fNJORD has been fully loaded." to console
+    send "%{prefix}% &fNJORD has been fully loaded." to all players
+    send "%{prefix}% &4NJORD is watching over you." to all players
 
 on player join:
     wait 5 seconds
-    execute console command "/o pack send %player%"
+    execute console command "/nexo pack %player%"
     send "%{prefix}% &4Resource pack loaded." to player
     send "%{log_prefix}% &fResource pack loaded for %player%." to console
     wait 7 seconds
     if {deathstatus::%player's uuid%} is set:
-        send "%{prefix}% &4RULE-BREAKER! &b | &fYou left while being in the death room, the timer has been reset!" to player
+        send "%{prefix}% &4RULE-BREAKER! &b| &fYou left while being in the death room, the timer has been reset!" to player
         if player is offline:
             stop
         execute console command "/minecraft:teleport %player% 4574 65 5344"
@@ -211,7 +221,7 @@ command /character [<offline player:offline player=%player%>]:
             set slot 0,8,36 and 44 of metadata tag "charGUI" of player to dragon egg named "&a✔ &7[&4NJORD&7-&5DEVELOPER&7]" with lore "&fThis player is the guy behind NJORD.", "&9He made the plugin you are using right now." and "&2He is sooo cool and awsome ;)"
             set slot 31 of metadata tag "charGUI" of player to bedrock named "&a✔ &6Official Staff" with lore "&fThis player is an official staff member."
             set slot 1,2,3,4,5,6,7,9,10,12,14,16,17,18,19,20,24,25,26,27,28,29,30,32,33,34,35,37,38,39,40,41,42, and 43 of metadata tag "charGUI" of player to grey glass pane named "&f"
-        else if player is op:
+        else if arg-1 is op:
             set slot 31 of metadata tag "charGUI" of player to bedrock named "&a✔ &6Official Staff" with lore "&fThis player is an official staff member."
             set slot 0,1,2,3,4,5,6,7,8,9,10,12,14,16,17,18,19,20,24,25,26,27,28,29,30,32,33,34,35,36,37,38,39,40,41,42,43 and 44 of metadata tag "charGUI" of player to grey glass pane named "&f"
         else:
@@ -220,8 +230,8 @@ command /character [<offline player:offline player=%player%>]:
         set slot 13 of metadata tag "charGUI" of player to skeleton skull named "&b%{_age}% years old" with lore "&fCharacter Age"
         set slot 15 of metadata tag "charGUI" of player to iron sword named "&fTown: &c%{_town} ? "Not a citizen of any town."%" with lore "&fNation: &c%{_nation} ? "Not a citizen of any nation."%"
         set slot 21 of metadata tag "charGUI" of player to paper named "&b%{_gender} ? "BUG! NO GENDER FOUND!"%" with lore "&fCharacter Gender"
-        #set slot 22 of metadata tag "charGUI" of player to lantern named "&fFirst Child: &c%{_firstKid} ? "Does not have a first child."%" with lore "&fSecond Child: &c%{_secondKid} ? "Does not have a second child."%"
-        set slot 22 of metadata tag "charGUI" of player to lantern named "&fFirst Child: &b&k HAMZIEE THE BEST " with lore "&fSecond Child: &c&k HAMZIEE THE BEST"
+        set slot 22 of metadata tag "charGUI" of player to lantern named "&fFirst Child: &c%{_firstKid} ? "Does not have a first child."%" with lore "&fSecond Child: &c%{_secondKid} ? "Does not have a second child."%"
+        #set slot 22 of metadata tag "charGUI" of player to lantern named "&fFirst Child: &b&k HAMZIEE THE BEST " with lore "&fSecond Child: &c&k HAMZIEE THE BEST"
         set slot 23 of metadata tag "charGUI" of player to cake named "&eMarried to: &5%{_partner} ? "&4Not married."%" with lore "&fCharacter Relationship"
         open (metadata tag "charGUI" of player) to player
 
